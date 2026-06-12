@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillGate IQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f8f8; --surface: #ffffff; --surface-soft: #f4faf9;
+    --border: #e1eae8; --border-strong: #cbdbd7;
+    --text: #14302b; --text-muted: #56655f; --text-faint: #87968f;
+    --accent: #0f766e; --accent-soft: #ecf7f5;
+    --danger: #b42318; --danger-bg: #fef3f2; --danger-bd: #fecdca;
+    --warn:   #b54708; --warn-bg:   #fffaeb; --warn-bd:   #fedf89;
+    --ok:     #067647; --ok-bg:     #ecfdf3; --ok-bd:     #abefc6;
+    --font: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+    --head: 'Lexend', var(--font);
+    --radius: 10px; --radius-sm: 7px;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 14px; }
+
+  .sidebar { width: 264px; min-width: 264px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; }
+  .sidebar-header { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+  .logo-text { font-family: var(--head); font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+  .logo-sub { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+  .new-chat-btn { width: 100%; padding: 9px 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--head); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: filter .15s; }
+  .new-chat-btn:hover { filter: brightness(1.08); }
+  .sidebar-section-label { padding: 16px 16px 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+  .history-list { flex: 1; overflow-y: auto; padding: 0 8px 16px; }
+  .history-item { padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background .1s; margin-bottom: 2px; border: 1px solid transparent; }
+  .history-item:hover { background: var(--surface-soft); }
+  .history-item.active { background: var(--accent-soft); border-color: #c7e6e0; }
+  .history-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-meta { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+  .history-badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 20px; font-weight: 600; margin-top: 5px; border: 1px solid transparent; }
+  .badge-blocked { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-bd); }
+  .badge-conditions { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-bd); }
+  .badge-ready { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-bd); }
+
+  .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .chat-header { padding: 14px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface); }
+  .chat-title { font-family: var(--head); font-size: 15px; font-weight: 600; }
+  .chat-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  .messages { flex: 1; overflow-y: auto; padding: 28px; display: flex; flex-direction: column; gap: 22px; }
+  .welcome { max-width: 580px; margin: 48px auto; text-align: center; }
+  .welcome-icon { width: 52px; height: 52px; background: var(--accent-soft); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 18px; }
+  .welcome h2 { font-family: var(--head); font-size: 22px; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.3px; }
+  .welcome p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+  .example-prompts { display: flex; flex-direction: column; gap: 8px; }
+  .example-prompt { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 15px; font-size: 13px; color: var(--text-muted); cursor: pointer; text-align: left; transition: all .15s; line-height: 1.45; }
+  .example-prompt:hover { border-color: var(--accent); color: var(--text); box-shadow: var(--shadow); }
+
+  .message-row { display: flex; flex-direction: column; gap: 6px; }
+  .message-user { align-self: flex-end; max-width: 62%; background: var(--accent); color: #fff; padding: 10px 14px; border-radius: 14px 14px 4px 14px; font-size: 14px; line-height: 1.5; }
+  .message-assistant { align-self: flex-start; width: 100%; max-width: 840px; }
+
+  .agent-pipeline { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .pipeline-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); margin-bottom: 12px; }
+  .agent-step { display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .agent-step:last-child { border-bottom: none; }
+  .step-indicator { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+  .step-idle { background: var(--surface-soft); color: var(--text-faint); border: 1px solid var(--border-strong); }
+  .step-running { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+  .step-done { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-bd); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+  .step-name { font-size: 13px; font-weight: 600; }
+  .step-detail { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .step-detail.running { color: var(--accent); }
+  .step-detail.done { color: var(--text-muted); }
+
+  .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .report-header { padding: 20px 24px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .report-partner { font-family: var(--head); font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+  .report-meta { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .pdf-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 12px; font-family: var(--head); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .pdf-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pdf-btn:disabled { opacity: .5; cursor: default; }
+
+  .decision { display: flex; align-items: stretch; margin: 0 24px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .decision-status { flex: 1; padding: 14px 18px; display: flex; flex-direction: column; gap: 3px; border-left: 4px solid var(--border-strong); }
+  .decision-status.blocked { background: var(--danger-bg); border-left-color: var(--danger); }
+  .decision-status.conditions { background: var(--warn-bg); border-left-color: var(--warn); }
+  .decision-status.ready { background: var(--ok-bg); border-left-color: var(--ok); }
+  .decision-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  .decision-value { font-family: var(--head); font-size: 16px; font-weight: 700; }
+  .decision-value.blocked { color: var(--danger); }
+  .decision-value.conditions { color: var(--warn); }
+  .decision-value.ready { color: var(--ok); }
+  .decision-metric { padding: 14px 18px; display: flex; flex-direction: column; gap: 3px; border-left: 1px solid var(--border); min-width: 92px; }
+  .decision-metric .decision-value { color: var(--text); font-size: 18px; }
+
+  .report-summary { margin: 18px 24px 4px; padding: 14px 16px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13.5px; line-height: 1.6; color: var(--text-muted); }
+  .report-section { padding: 18px 24px; }
+  .report-section + .report-section { border-top: 1px solid var(--border); }
+  .section-title { font-family: var(--head); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-count { background: var(--surface-soft); color: var(--text-muted); font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border); }
+
+  /* Study-plan milestones — 2-column compact grid */
+  .milestones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 640px) { .milestones-grid { grid-template-columns: 1fr; } }
+  .milestone { display: flex; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-soft); }
+  .milestone-week { flex-shrink: 0; width: 52px; text-align: center; }
+  .milestone-week .wk { font-family: var(--head); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+  .milestone-week .hrs { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .milestone-body { flex: 1; }
+  .milestone-focus { font-size: 13.5px; font-weight: 600; }
+  .milestone-activities { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .chip { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-soft); color: var(--accent); border: 1px solid #d6ebe7; }
+
+  .finding { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .finding:first-child { padding-top: 0; }
+  .finding:last-child { border-bottom: none; padding-bottom: 0; }
+  .finding-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+  .finding-title { font-size: 13.5px; font-weight: 600; flex: 1; }
+  .finding-body { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .finding-cite { font-size: 11.5px; color: var(--accent); margin-top: 5px; font-weight: 500; }
+  .sev { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 5px; border: 1px solid transparent; flex-shrink: 0; }
+  .sev-critical, .sev-high { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-bd); }
+  .sev-medium { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-bd); }
+  .sev-low { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-bd); }
+
+  .row { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .row:first-child { padding-top: 0; }
+  .row:last-child { border-bottom: none; padding-bottom: 0; }
+  .row-main { flex: 1; }
+  .row-name { font-size: 13.5px; font-weight: 600; }
+  .row-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; line-height: 1.45; }
+  .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 5px; flex-shrink: 0; border: 1px solid transparent; }
+  .tag-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-bd); }
+  .tag-warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-bd); }
+  .tag-ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-bd); }
+  .tag-neutral { background: var(--surface-soft); color: var(--text-muted); border-color: var(--border); }
+
+  .pq { padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .pq:first-child { padding-top: 0; }
+  .pq:last-child { border-bottom: none; padding-bottom: 0; }
+  .pq-q { font-size: 13.5px; font-weight: 600; line-height: 1.45; }
+  .pq-meta { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+  .pq-cite { color: var(--accent); font-weight: 500; }
+
+  .mgr { background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .mgr-summary { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-bottom: 10px; }
+  .mgr-sub { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin: 10px 0 6px; }
+
+  details.workiq summary { list-style: none; cursor: pointer; font-family: var(--head); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); display: flex; align-items: center; gap: 8px; }
+  details.workiq summary::-webkit-details-marker { display: none; }
+  details.workiq summary .chev { transition: transform .15s; font-size: 10px; color: var(--text-faint); }
+  details.workiq[open] summary .chev { transform: rotate(90deg); }
+  .workiq-body { margin-top: 12px; }
+  .workiq-grid { display: grid; grid-template-columns: 150px 1fr; gap: 6px 14px; font-size: 13px; }
+  .workiq-k { color: var(--text-faint); font-weight: 600; }
+  .workiq-v { color: var(--text-muted); line-height: 1.5; }
+  .workiq-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; font-style: italic; }
+
+  .gate-notice { margin: 0 24px 22px; padding: 13px 15px; background: var(--accent-soft); border: 1px solid #c7e6e0; border-radius: var(--radius-sm); font-size: 12.5px; color: var(--accent); display: flex; gap: 9px; align-items: flex-start; line-height: 1.5; }
+  .gate-icon { flex-shrink: 0; }
+
+  .input-area { padding: 14px 28px 20px; border-top: 1px solid var(--border); background: var(--surface); }
+  .input-wrapper { max-width: 840px; margin: 0 auto; position: relative; }
+  .input-box { width: 100%; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 13px 52px 13px 16px; font-size: 14px; color: var(--text); font-family: var(--font); resize: none; outline: none; transition: border-color .15s, box-shadow .15s; line-height: 1.5; min-height: 50px; max-height: 160px; overflow-y: auto; }
+  .input-box::placeholder { color: var(--text-faint); }
+  .input-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .send-btn { position: absolute; right: 9px; bottom: 9px; width: 34px; height: 34px; background: var(--accent); border: none; border-radius: var(--radius-sm); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: filter .15s, opacity .15s; font-size: 15px; }
+  .send-btn:hover { filter: brightness(1.08); }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .input-hint { font-size: 11px; color: var(--text-faint); margin-top: 8px; text-align: center; }
+
+  .error-box { color: var(--danger); font-size: 13px; padding: 14px 16px; background: var(--danger-bg); border: 1px solid var(--danger-bd); border-radius: var(--radius); }
+  .refusal-box { display: flex; gap: 11px; align-items: flex-start; font-size: 13.5px; line-height: 1.55; color: var(--text-muted); padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .refusal-box .ic { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+  .refusal-box strong { color: var(--text); font-family: var(--head); font-weight: 600; display: block; margin-bottom: 3px; }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div>
+        <div class="logo-text">SkillGate IQ</div>
+        <div class="logo-sub">Learning Readiness</div>
+      </div>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()"><span>+</span> New plan</button>
+  </div>
+  {% if history %}<div class="sidebar-section-label">Recent plans</div>{% endif %}
+  <div class="history-list" id="historyList">
+    {% for session in history %}
+    <div class="history-item" id="hist-{{ session.id }}" onclick="loadSession('{{ session.id }}')">
+      <div class="history-title">{{ session.title }}</div>
+      <div class="history-meta">{{ session.created_at[:10] }}</div>
+      {% if session.messages %}
+        {% set last = session.messages[-1] %}
+        {% if last.report is defined %}
+          {% set status = last.report.report.readiness_status %}
+          {% if 'Not ready' in status %}<span class="history-badge badge-blocked">Not ready</span>
+          {% elif 'risk' in status %}<span class="history-badge badge-conditions">At risk</span>
+          {% else %}<span class="history-badge badge-ready">On track</span>{% endif %}
+        {% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="main">
+  <div class="chat-header">
+    <div>
+      <div class="chat-title" id="chatTitle">New plan</div>
+      <div class="chat-subtitle" id="chatSubtitle">Name a learner and a certification goal</div>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">🎓</div>
+      <h2>Certification readiness, planned</h2>
+      <p>Name a learner and the certification they're targeting. SkillGate IQ retrieves their requirements, weighs their real work capacity, and builds a cited, capacity-aware study plan with a readiness assessment and manager insights.</p>
+      <div class="example-prompts">
+        <button class="example-prompt" onclick="usePrompt(this)">Help L-2001, a DevOps Engineer, prepare for ACP-DO2 in the next 8 weeks.</button>
+        <button class="example-prompt" onclick="usePrompt(this)">Build a study plan for L-2004 targeting ACP-SA4 over 10 weeks.</button>
+        <button class="example-prompt" onclick="usePrompt(this)">Is L-2005 ready to sit ACP-DO2? Summarise readiness for their manager.</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-wrapper">
+      <textarea class="input-box" id="inputBox" placeholder="Name a learner and a certification goal..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+    <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+  </div>
+</div>
+
+<script>
+let currentSessionId = null;
+let isStreaming = false;
+let lastReport = null, lastPlan = null, lastCurator = null;
+window.__reports = [];
+
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function usePrompt(btn) { const i = document.getElementById('inputBox'); i.value = btn.textContent.trim(); autoResize(i); sendMessage(); }
+
+const WELCOME_HTML = document.getElementById('welcome').outerHTML;
+
+function newChat() {
+  currentSessionId = null; lastReport = null; lastPlan = null; lastCurator = null;
+  document.getElementById('messages').innerHTML = WELCOME_HTML;
+  document.getElementById('chatTitle').textContent = 'New plan';
+  document.getElementById('chatSubtitle').textContent = 'Name a learner and a certification goal';
+  document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+}
+
+function sendMessage() {
+  if (isStreaming) return;
+  const input = document.getElementById('inputBox');
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = ''; input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  isStreaming = true;
+
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  const msgs = document.getElementById('messages');
+  const userRow = document.createElement('div');
+  userRow.className = 'message-row';
+  userRow.innerHTML = `<div class="message-user">${escHtml(message)}</div>`;
+  msgs.appendChild(userRow);
+
+  const assistantRow = document.createElement('div');
+  assistantRow.className = 'message-row message-assistant';
+  assistantRow.id = 'current-response';
+  assistantRow.innerHTML = `
+    <div class="agent-pipeline" id="pipeline">
+      <div class="pipeline-title">Running analysis pipeline</div>
+      <div class="agent-step" id="step-curator">
+        <div class="step-indicator step-idle" id="ind-curator">1</div>
+        <div><div class="step-name">Learning Path Curator</div><div class="step-detail" id="det-curator">Waiting…</div></div>
+      </div>
+      <div class="agent-step" id="step-reasoner">
+        <div class="step-indicator step-idle" id="ind-reasoner">2</div>
+        <div><div class="step-name">Study Plan &amp; Readiness Reasoner</div><div class="step-detail" id="det-reasoner">Waiting…</div></div>
+      </div>
+      <div class="agent-step" id="step-report">
+        <div class="step-indicator step-idle" id="ind-report">3</div>
+        <div><div class="step-name">Report &amp; Manager Insights</div><div class="step-detail" id="det-report">Waiting…</div></div>
+      </div>
+    </div>`;
+  msgs.appendChild(assistantRow);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const sessionId = currentSessionId || generateId();
+  const isFollowup = !!currentSessionId;
+
+  fetch('/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, session_id: sessionId, is_followup: isFollowup,
+      previous_context: lastReport ? { report: lastReport, plan: lastPlan } : null })
+  }).then(response => {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    function read() {
+      reader.read().then(({ done, value }) => {
+        if (done) { isStreaming = false; document.getElementById('sendBtn').disabled = false; return; }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) { try { handleEvent(JSON.parse(line.slice(6))); } catch(e) {} }
+        }
+        read();
+      });
+    }
+    read();
+  }).catch(err => { isStreaming = false; document.getElementById('sendBtn').disabled = false; console.error(err); });
+}
+
+function handleEvent(data) {
+  const msgs = document.getElementById('messages');
+  if (data.type === 'agent_start' || data.type === 'agent_complete') {
+    const key = data.agent;
+    const ind = document.getElementById(`ind-${key}`);
+    const det = document.getElementById(`det-${key}`);
+    const done = data.type === 'agent_complete';
+    if (ind) { ind.className = `step-indicator ${done ? 'step-done' : 'step-running'}`; ind.textContent = done ? '✓' : '●'; }
+    if (det) { det.className = `step-detail ${done ? 'done' : 'running'}`; det.textContent = data.message; }
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  if (data.type === 'complete') {
+    currentSessionId = data.session_id;
+    lastReport = data.report; lastPlan = data.plan; lastCurator = data.curator;
+    const pipeline = document.getElementById('pipeline');
+    if (pipeline) pipeline.remove();
+    const container = document.getElementById('current-response');
+    if (container) { container.innerHTML = renderReport(data.report, data.plan, data.curator); container.removeAttribute('id'); }
+    document.getElementById('chatTitle').textContent = data.title;
+    const r = data.report.report;
+    document.getElementById('chatSubtitle').textContent = `${r.readiness_status} · Readiness ${r.readiness_score}/100`;
+    updateSidebar(data.session_id, data.title, data.report);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  if (data.type === 'refusal') {
+    const container = document.getElementById('current-response');
+    if (container) { container.innerHTML = `<div class="refusal-box"><span class="ic">🎓</span><span><strong>Out of scope</strong>${escHtml(data.message)}</span></div>`; container.removeAttribute('id'); }
+    isStreaming = false; document.getElementById('sendBtn').disabled = false;
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  if (data.type === 'error') {
+    const container = document.getElementById('current-response');
+    if (container) { container.innerHTML = `<div class="error-box">⚠ Error: ${escHtml(data.message)}</div>`; container.removeAttribute('id'); }
+    isStreaming = false; document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function statusKind(status) {
+  status = status || '';
+  if (/not ready/i.test(status)) return 'blocked';
+  if (/risk/i.test(status)) return 'conditions';
+  return 'ready';
+}
+function sevKind(sev) { const s = (sev || '').toLowerCase(); if (s === 'critical' || s === 'high') return s; if (s === 'medium') return 'medium'; return 'low'; }
+function priorityTag(p) { p = (p || '').toLowerCase(); if (p === 'high' || p === 'immediate' || p === 'critical') return 'tag-danger'; if (p === 'medium') return 'tag-warn'; return 'tag-neutral'; }
+
+function renderReport(report, plan, curator) {
+  const r = report.report;
+  const idx = window.__reports.length;
+  window.__reports.push({ report, curator });
+  const sk = statusKind(r.readiness_status);
+  const sp = r.study_plan || {};
+
+  const milestones = (sp.milestones || []).map(m => `
+    <div class="milestone">
+      <div class="milestone-week"><div class="wk">Week ${escHtml(String(m.week))}</div><div class="hrs">${escHtml(String(m.hours))}h</div></div>
+      <div class="milestone-body">
+        <div class="milestone-focus">${escHtml(m.focus)}</div>
+        <div class="milestone-activities">${escHtml(m.activities)}</div>
+        <div class="chips">${(m.skills_covered || []).map(s => `<span class="chip">${escHtml(s)}</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+
+  const gaps = (r.skill_gaps || []).map(g => `
+    <div class="finding">
+      <div class="finding-header">
+        <div class="finding-title">${escHtml(g.gap)}</div>
+        <span class="sev sev-${sevKind(g.severity)}">${escHtml(g.severity)}</span>
+      </div>
+      ${g.addressed_in_week ? `<div class="finding-body">Addressed in week ${escHtml(String(g.addressed_in_week))}</div>` : ''}
+    </div>`).join('');
+
+  const pqs = (r.practice_questions || []).map(q => `
+    <div class="pq">
+      <div class="pq-q">${escHtml(q.question)}</div>
+      <div class="pq-meta">${escHtml(q.skill)} · <span class="pq-cite">${escHtml(q.citation)}</span></div>
+    </div>`).join('');
+
+  const adjustments = (r.recommended_adjustments || []).map(a => `
+    <div class="row">
+      <div class="row-main"><div class="row-name">${escHtml(a.adjustment)}</div><div class="row-sub">${escHtml(a.reason)}</div></div>
+      <span class="tag ${priorityTag(a.priority)}">${escHtml(a.priority)}</span>
+    </div>`).join('');
+
+  const mi = r.manager_insights || {};
+  const mgrActions = (mi.recommended_actions || []).map(a => `
+    <div class="row"><div class="row-main"><div class="row-name">${escHtml(a.action)}</div><div class="row-sub">Owner: ${escHtml(a.owner)}</div></div></div>`).join('');
+  const managerBlock = (mi.readiness_summary || (mi.risk_areas || []).length) ? `
+    <div class="report-section">
+      <div class="section-title">Manager insights${mi.scope ? ` <span class="section-count">${escHtml(mi.scope)}</span>` : ''}</div>
+      <div class="mgr">
+        <div class="mgr-summary">${escHtml(mi.readiness_summary)}</div>
+        ${(mi.risk_areas || []).length ? `<div class="mgr-sub">Risk areas</div><div class="chips">${mi.risk_areas.map(x => `<span class="chip" style="background:var(--warn-bg);color:var(--warn);border-color:var(--warn-bd)">${escHtml(x)}</span>`).join('')}</div>` : ''}
+        ${mgrActions ? `<div class="mgr-sub">Recommended actions</div>${mgrActions}` : ''}
+      </div>
+    </div>` : '';
+
+  const workiq = renderWorkIq(curator);
+
+  return `<div class="report-card">
+    <div class="report-header">
+      <div>
+        <div class="report-partner">${escHtml(r.learner_id || 'Learner')}${r.certification_target ? ' — ' + escHtml(r.certification_target) : ''}</div>
+        <div class="report-meta">${[escHtml(r.role), 'Generated ' + escHtml(r.generated_date)].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div><button class="pdf-btn" onclick="downloadPdf(${idx}, this)">⬇ Download PDF</button></div>
+    </div>
+
+    <div class="decision">
+      <div class="decision-status ${sk}">
+        <div class="decision-label">Readiness</div>
+        <div class="decision-value ${sk}">${escHtml(r.readiness_status)}</div>
+      </div>
+      <div class="decision-metric"><div class="decision-label">Score</div><div class="decision-value">${escHtml(String(r.readiness_score))}<span style="font-size:12px;color:var(--text-faint);font-weight:500">/100</span></div></div>
+      <div class="decision-metric"><div class="decision-label">Plan</div><div class="decision-value">${escHtml(String(sp.total_weeks || '—'))}<span style="font-size:12px;color:var(--text-faint);font-weight:500">wks</span></div></div>
+      <div class="decision-metric"><div class="decision-label">Weekly</div><div class="decision-value">${escHtml(String(sp.weekly_hours_target || '—'))}<span style="font-size:12px;color:var(--text-faint);font-weight:500">h</span></div></div>
+    </div>
+
+    <div class="report-summary">${escHtml(r.executive_summary)}</div>
+
+    <div class="report-section">
+      <div class="section-title">Study plan <span class="section-count">${(sp.milestones || []).length} milestones</span></div>
+      ${(sp.milestones || []).length ? `<div class="milestones-grid">${milestones}</div>` : '<div class="row-sub">No milestones.</div>'}
+    </div>
+    <div class="report-section">
+      <div class="section-title">Skill gaps <span class="section-count">${(r.skill_gaps || []).length}</span></div>
+      ${gaps || '<div class="row-sub">No outstanding gaps.</div>'}
+    </div>
+    <div class="report-section">
+      <div class="section-title">Practice questions <span class="section-count">${(r.practice_questions || []).length}</span></div>
+      ${pqs || '<div class="row-sub">None.</div>'}
+    </div>
+    <div class="report-section">
+      <div class="section-title">Recommended adjustments <span class="section-count">${(r.recommended_adjustments || []).length}</span></div>
+      ${adjustments || '<div class="row-sub">None.</div>'}
+    </div>
+    ${managerBlock}
+    ${workiq ? `<div class="report-section">${workiq}</div>` : ''}
+
+    <div class="gate-notice"><span class="gate-icon">🔒</span><span>${escHtml(r.assistant_notice)}</span></div>
+  </div>`;
+}
+
+function renderWorkIq(curator) {
+  const w = curator && curator.work_iq_findings;
+  const l = w && w.learner;
+  if (!l) return '';
+  const ws = l.work_signals || {};
+  const sh = l.study_history || {};
+  const rows = [];
+  rows.push(['Learner', `${escHtml(l.name)} — ${escHtml(l.role)} (${escHtml(l.team)})`]);
+  rows.push(['Work signals', `${escHtml(String(ws.meeting_hours_per_week))} meeting hrs/wk · ${escHtml(String(ws.focus_hours_per_week))} focus hrs/wk · prefers ${escHtml(ws.preferred_learning_slot)}`]);
+  rows.push(['Study history', `${escHtml(String(sh.practice_score_avg))}% practice avg · ${escHtml(String(sh.hours_studied))}h studied · ${escHtml(sh.prior_outcome)}`]);
+  if (w.team_signals) rows.push(['Team', `${escHtml(w.team_signals.team)} — ${escHtml(w.team_signals.completion_trend)}`]);
+  const grid = rows.map(([k, v]) => `<div class="workiq-k">${k}</div><div class="workiq-v">${v}</div>`).join('');
+  return `<details class="workiq"><summary><span class="chev">▶</span> Work context (Work IQ)</summary>
+    <div class="workiq-body"><div class="workiq-grid">${grid}</div><div class="workiq-note">${escHtml(w.source_note || 'Synthetic work signals.')}</div></div></details>`;
+}
+
+function downloadPdf(idx, btn) {
+  const entry = window.__reports[idx];
+  if (!entry) return;
+  const original = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = 'Preparing…';
+  const doc = buildPdfDocument(entry.report, entry.curator);
+  document.body.appendChild(doc);
+  const who = (entry.report.report.learner_id || 'learner').replace(/[^a-z0-9]+/gi, '_');
+  const opt = {
+    margin: [14, 14, 16, 14],
+    filename: `SkillGate_IQ_Learning_Brief_${who}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'avoid-all'] }
+  };
+  html2pdf().set(opt).from(doc).save().then(() => { document.body.removeChild(doc); btn.disabled = false; btn.innerHTML = original; })
+    .catch(() => { document.body.removeChild(doc); btn.disabled = false; btn.innerHTML = original; });
+}
+
+function buildPdfDocument(report, curator) {
+  const r = report.report;
+  const today = new Date().toISOString().slice(0, 10);
+  const C = { text: '#0d1f1b', muted: '#36433e', faint: '#566058', border: '#b9c6c1', accent: '#0c5f59',
+              danger: '#b42318', warn: '#b54708', ok: '#067647' };
+  const statusColor = st => /not ready/i.test(st) ? C.danger : /risk/i.test(st) ? C.warn : C.ok;
+  const sevColor = s => { s = (s||'').toLowerCase(); return (s==='critical'||s==='high') ? C.danger : s==='medium' ? C.warn : C.ok; };
+  const sp = r.study_plan || {};
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `width:182mm;font-family:'Source Sans 3',Arial,sans-serif;color:${C.text};font-size:11px;line-height:1.5;background:#fff;`;
+  const sectionTitle = t => `<div style="font-family:'Lexend',Arial,sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${C.faint};margin:16px 0 8px;border-bottom:1px solid ${C.border};padding-bottom:4px;">${t}</div>`;
+
+  const milestones = (sp.milestones || []).map(m => `
+    <div style="margin-bottom:8px;padding-left:8px;border-left:3px solid ${C.accent};">
+      <div style="font-weight:700;">Week ${esc(String(m.week))} — ${esc(m.focus)} <span style="color:${C.faint};font-weight:400;">(${esc(String(m.hours))}h)</span></div>
+      <div style="color:${C.muted};">${esc(m.activities)}</div>
+      <div style="color:${C.faint};">Skills: ${esc((m.skills_covered || []).join(', '))}</div>
+    </div>`).join('');
+  const gaps = (r.skill_gaps || []).map(g => `<div style="margin-bottom:4px;"><span style="font-weight:700;">${esc(g.gap)}</span> <span style="color:${sevColor(g.severity)};font-size:9px;text-transform:uppercase;">[${esc(g.severity)}]</span>${g.addressed_in_week ? ` <span style="color:${C.faint};">— week ${esc(String(g.addressed_in_week))}</span>` : ''}</div>`).join('');
+  const pqs = (r.practice_questions || []).map(q => `<div style="margin-bottom:5px;"><span style="font-weight:700;">${esc(q.question)}</span><div style="color:${C.faint};">${esc(q.skill)} · ${esc(q.citation)}</div></div>`).join('');
+  const adj = (r.recommended_adjustments || []).map(a => `<div style="margin-bottom:4px;"><span style="font-weight:700;">${esc(a.adjustment)}</span> <span style="color:${C.muted};font-size:9px;">[${esc(a.priority)}]</span><div style="color:${C.faint};">${esc(a.reason)}</div></div>`).join('');
+  const mi = r.manager_insights || {};
+  const mgr = `${mi.readiness_summary ? `<div style="color:${C.muted};margin-bottom:4px;">${esc(mi.readiness_summary)}</div>` : ''}
+    ${(mi.risk_areas||[]).length ? `<div style="color:${C.faint};">Risk areas: ${esc((mi.risk_areas||[]).join('; '))}</div>` : ''}
+    ${(mi.recommended_actions||[]).map(a => `<div>• ${esc(a.action)} <span style="color:${C.faint};">(${esc(a.owner)})</span></div>`).join('')}`;
+
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid ${C.accent};padding-bottom:10px;">
+      <div><div style="font-family:'Lexend',Arial,sans-serif;font-size:18px;font-weight:700;color:${C.accent};">SkillGate IQ</div>
+      <div style="color:${C.faint};font-size:10px;">Learning Readiness Brief</div></div>
+      <div style="text-align:right;color:${C.faint};font-size:10px;">Generated ${esc(r.generated_date || today)}</div>
+    </div>
+    <div style="margin-top:12px;font-family:'Lexend',Arial,sans-serif;font-size:15px;font-weight:700;">${esc(r.learner_id || 'Learner')}${r.certification_target ? ' — ' + esc(r.certification_target) : ''}</div>
+    <div style="color:${C.muted};font-size:10px;margin-top:2px;">${esc(r.role)}</div>
+    <div style="display:flex;gap:18px;margin-top:12px;padding:10px 12px;background:#f4faf9;border:1px solid ${C.border};border-radius:6px;">
+      <div><div style="color:${C.faint};font-size:9px;text-transform:uppercase;">Readiness</div><div style="font-weight:700;color:${statusColor(r.readiness_status)};">${esc(r.readiness_status)}</div></div>
+      <div><div style="color:${C.faint};font-size:9px;text-transform:uppercase;">Score</div><div style="font-weight:700;">${esc(String(r.readiness_score))}/100</div></div>
+      <div><div style="color:${C.faint};font-size:9px;text-transform:uppercase;">Plan</div><div style="font-weight:700;">${esc(String(sp.total_weeks||'—'))} wks @ ${esc(String(sp.weekly_hours_target||'—'))}h/wk</div></div>
+    </div>
+    ${sectionTitle('Executive summary')}<div style="color:${C.muted};">${esc(r.executive_summary)}</div>
+    ${sectionTitle('Study plan (' + (sp.milestones||[]).length + ' milestones)')}${milestones || '<div style="color:'+C.faint+'">None.</div>'}
+    ${sectionTitle('Skill gaps (' + (r.skill_gaps||[]).length + ')')}${gaps || '<div style="color:'+C.faint+'">None.</div>'}
+    ${sectionTitle('Practice questions (' + (r.practice_questions||[]).length + ')')}${pqs || '<div style="color:'+C.faint+'">None.</div>'}
+    ${sectionTitle('Recommended adjustments (' + (r.recommended_adjustments||[]).length + ')')}${adj || '<div style="color:'+C.faint+'">None.</div>'}
+    ${sectionTitle('Manager insights' + (mi.scope ? ' — ' + esc(mi.scope) : ''))}${mgr}
+    <div style="margin-top:18px;padding:10px 12px;background:#ecf7f5;border:1px solid #c7e6e0;border-radius:6px;color:${C.accent};font-size:10px;">🔒 ${esc(r.assistant_notice)}</div>
+  `;
+  return wrap;
+}
+
+function updateSidebar(sessionId, title, report) {
+  const list = document.getElementById('historyList');
+  const existing = document.getElementById(`hist-${sessionId}`);
+  const status = report.report.readiness_status;
+  const badgeClass = /not ready/i.test(status) ? 'badge-blocked' : /risk/i.test(status) ? 'badge-conditions' : 'badge-ready';
+  const badgeText = /not ready/i.test(status) ? 'Not ready' : /risk/i.test(status) ? 'At risk' : 'On track';
+  if (existing) { existing.classList.add('active'); return; }
+  document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+  const item = document.createElement('div');
+  item.className = 'history-item active';
+  item.id = `hist-${sessionId}`;
+  item.onclick = () => loadSession(sessionId);
+  item.innerHTML = `<div class="history-title">${escHtml(title)}</div><div class="history-meta">${new Date().toISOString().slice(0,10)}</div><span class="history-badge ${badgeClass}">${badgeText}</span>`;
+  list.insertBefore(item, list.firstChild);
+}
+
+function loadSession(sessionId) {
+  fetch(`/history/${sessionId}`).then(r => r.json()).then(session => {
+    currentSessionId = sessionId;
+    const msgs = document.getElementById('messages');
+    msgs.innerHTML = '';
+    document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+    const hist = document.getElementById(`hist-${sessionId}`);
+    if (hist) hist.classList.add('active');
+    session.messages.forEach(msg => {
+      const row = document.createElement('div');
+      row.className = 'message-row';
+      if (msg.role === 'user') {
+        row.innerHTML = `<div class="message-user">${escHtml(msg.content)}</div>`;
+      } else {
+        row.className += ' message-assistant';
+        row.innerHTML = renderReport(msg.report, msg.plan, msg.curator);
+        lastReport = msg.report; lastPlan = msg.plan; lastCurator = msg.curator;
+      }
+      msgs.appendChild(row);
+    });
+    document.getElementById('chatTitle').textContent = session.title;
+    const lastMsg = session.messages[session.messages.length - 1];
+    if (lastMsg && lastMsg.report) {
+      const r = lastMsg.report.report;
+      document.getElementById('chatSubtitle').textContent = `${r.readiness_status} · Readiness ${r.readiness_score}/100`;
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+  });
+}
+
+function generateId() { return 'sess-' + Math.random().toString(36).slice(2, 11); }
+function escHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+const esc = escHtml;
+</script>
+</body>
+</html>

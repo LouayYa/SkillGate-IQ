@@ -1,0 +1,7 @@
+azure-ai-projects>=2.1.0
+azure-identity
+openai
+python-dotenv
+flask
+mcp
+fastmcp

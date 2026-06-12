@@ -1,0 +1,14 @@
+# Secrets & local config
+.env
+.env.*
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Local runtime artifacts
+chat_history.json
+curator_output.json
+plan_output.json
+report_output.json
