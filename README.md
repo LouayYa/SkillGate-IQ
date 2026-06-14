@@ -18,6 +18,7 @@ SkillGate IQ takes a single request — *"Help L-2001, a DevOps Engineer, prepar
 - [The agents](#the-agents)
 - [Knowledge base](#knowledge-base-foundry-iq)
 - [Reliability & Safety](#reliability--safety)
+- [Evaluation](#evaluation)
 - [Project structure](#project-structure)
 - [Getting started](#getting-started)
 - [Demo walkthrough](#demo-walkthrough)
@@ -41,6 +42,7 @@ SkillGate IQ acts as an **AI learning-readiness committee**: it understands cert
 - 🔁 Runs a **critic loop** that self-checks the plan against capacity, coverage, and grounding
 - 📝 Produces **grounded, cited practice questions** from an approved question bank
 - 📊 Gives a **readiness assessment** (On track / At risk / Not ready, scored 0–100)
+- 🔄 **Adapts over time** — re-running as a learner logs progress moves the verdict (e.g. At risk → On track)
 - 👔 Surfaces **manager insights** — team readiness and capacity-risk areas, by ID only
 - 📄 Exports the whole brief as a clean **PDF**
 
@@ -103,7 +105,7 @@ Maya (L-2001) has **24 meeting hrs/wk, only 9 focus hrs/wk**, a 62% practice ave
 - **Manager insight:** flagged *"Capacity constraints with 24 meeting hours…"* as a risk area, grounded in both Work IQ and `LRN-WL-006`.
 - **Critic loop:** `self_check_passed: true`.
 
-The same engine returns **On track** for a high-capacity learner (L-2005) and **Not ready** for an under-prepared expert-cert candidate (L-2004).
+The same engine returns **On track** for a high-capacity learner (L-2005) and **Not ready** for an under-prepared expert-cert candidate (L-2004). And it **adapts**: re-run the same learner after they've logged more study hours and freed up focus time, and the verdict moves from **At risk → On track** — the system reasons over their latest reality, matching Challenge A's "loop back and adapt" flow.
 
 ---
 
@@ -146,6 +148,31 @@ SkillGate IQ is **read-only decision support**. It cannot enrol, schedule, or as
 - **Fail-safe Work IQ** — if the Work IQ layer is unavailable, the pipeline continues on the knowledge base alone; Work IQ can never break a run.
 - **Robust parsing** — agent output is parsed defensively (handles code fences and duplicate JSON objects).
 - **Synthetic data only** — see the [statement below](#synthetic-data-statement).
+
+---
+
+## Evaluation
+
+SkillGate IQ's readiness outputs were evaluated in the **Microsoft Foundry portal** using its built-in evaluators, graded by `gpt-4o-mini`, against a dataset of learner scenarios spanning all three readiness states plus an out-of-scope guardrail case ([`evals/eval_dataset.jsonl`](evals/eval_dataset.jsonl)).
+
+| Evaluator | Result | What it measures |
+|---|---|---|
+| **Groundedness** | **100%** (5/5) | Every verdict is supported by the retrieved knowledge-base context — no hallucinated requirements |
+| **Similarity** | **100%** (5/5) | Verdicts match the expected reference outcome |
+| **Coherence** | **100%** (5/5) | Logically consistent, well-structured output |
+| **Fluency** | **100%** (5/5) | Clear, well-formed language |
+| **ResponseCompleteness** | **100%** (5/5) | Covers everything the request needs |
+| **Relevance** | **80%** (4/5) | Responses directly address the learner's request |
+| **Retrieval** | **80%** (4/5) | Quality of the grounding context used |
+| **Safety suite** (violence, hate/unfairness, self-harm, indirect-attack/prompt-injection, ungrounded attributes) | **0% defect** | No harmful content detected across any row |
+
+> _Evaluation run in Azure AI Foundry → Evaluation; dataset in [`evals/`](evals/). Screenshot below._
+>
+> _(GroundednessPro was excluded — its backend service is not enabled in the project's region; the standard Groundedness evaluator is used instead.)_
+
+![Foundry evaluation results: Groundedness, Similarity, Coherence, Fluency and ResponseCompleteness at 100%; Relevance and Retrieval at 80%](evals/eval_results.png)
+
+These results map directly to the judging rubric: **Groundedness/Relevance → Accuracy & Relevance (25%)**, and the **0% safety defect rate → Reliability & Safety (20%)**.
 
 ---
 
@@ -220,7 +247,7 @@ python main.py         # or run the pipeline from the CLI
 6. Click **⬇ Download PDF** for the full readiness brief.
 7. Try an off-topic question to see the **scope guardrail** in action.
 
-🎥 **Demo video:** _<add YouTube link before submission>_
+🎥 **Demo video:** [Watch the 5-minute demo on YouTube](https://youtu.be/UcNQu-fiv0I)
 
 ---
 

@@ -36,20 +36,20 @@ LEARNERS = {
         "team": "Team Alpha",
         "target_certification": "ACP-DO2",
         "work_signals": {
-            "meeting_hours_per_week": 24,
-            "focus_hours_per_week": 9,
+            "meeting_hours_per_week": 16,
+            "focus_hours_per_week": 16,
             "preferred_learning_slot": "Morning",
         },
         "study_history": {
-            "practice_score_avg": 62,
-            "hours_studied": 10,
+            "practice_score_avg": 88,
+            "hours_studied": 26,
             "prior_outcome": "ACP-CE1 passed",
-            "last_activity": "approx. 1 week ago",
+            "last_activity": "approx. 2 days ago",
         },
         "context_note": (
-            "Heavy meeting load (24 hrs/wk) and only 9 focus hrs/wk — capacity "
-            "constrained per LRN-WL-006. Below both the recommended hours and the "
-            "75% practice target for ACP-DO2."
+            "Four weeks on: meeting load eased to 16 hrs/wk with 16 focus hrs/wk, "
+            "practice average up to 88% (above the 75% target), and 26 hours logged "
+            "(exceeds the 25-hour ACP-DO2 recommendation) — now on track / exam-ready."
         ),
     },
     "L-2002": {
